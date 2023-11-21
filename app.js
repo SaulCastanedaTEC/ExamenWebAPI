@@ -124,8 +124,32 @@ finally {
 }
 });
 // end point para select por id 
+app.get('/ObtenerArticulo/:id', async (req, res) => {
+  const { id } = req.params;
 
+  let pool;
+  try {
+    pool = await mssql.connect(sqlConfig);
 
+    const result = await pool
+      .request()
+      .input('ID', mssql.Int, id)
+      .query('SELECT * FROM Publicacion WHERE ID = @ID');
+
+    if (result.recordset.length > 0) {
+      res.json(result.recordset[0]);
+    } else {
+      res.status(404).send('Artículo no encontrado');
+    }
+  } catch (error) {
+    console.error('Error al obtener el artículo:', error.message);
+    res.status(500).send('Error al obtener el artículo: ' + error.message);
+  } finally {
+    if (pool) {
+      pool.close();
+    }
+  }
+});
 
 // Inicia el servidor
 app.listen(port, () => {
