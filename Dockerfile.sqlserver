@@ -8,3 +8,4 @@ COPY mssql.conf /etc/mssql/15.mssql.conf
 EXPOSE 1433
 
 CMD ["/opt/mssql/bin/sqlservr", "-f"]
+ 
