@@ -65,6 +65,41 @@ app.post('/InsertarAArticulos', async (req, res) => {
   }
 });
  
+// end point para update 
+app.put('/ActualizarArticulo/:id', async (req, res) => {
+  const { Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion } = req.body;
+  const { id } = req.params;
+
+  let pool;
+  try {
+    pool = await mssql.connect(sqlConfig);
+
+    const result = await pool
+      .request()
+      .input('Titulo', mssql.NVarChar, Titulo)
+      .input('Contenido', mssql.NVarChar, Contenido)
+      .input('Autor', mssql.NVarChar, Autor)
+      .input('Categoria', mssql.NVarChar, Categoria)
+      .input('Fecha_de_publicacion', mssql.DateTime, Fecha_de_publicacion)
+      .input('ID', mssql.Int, id)
+      .query('UPDATE Publicacion SET Titulo = @Titulo, Contenido = @Contenido, Autor = @Autor, Categoria = @Categoria, Fecha_de_publicacion = @Fecha_de_publicacion WHERE ID = @ID');
+
+    if (result.rowsAffected[0] > 0) {
+      res.status(200).send('Artículo actualizado con éxito');
+    } else {
+      res.status(404).send('Artículo no encontrado');
+    }
+  } catch (error) {
+    console.error('Error al actualizar el artículo:', error.message);
+    res.status(500).send('Error al actualizar el artículo: ' + error.message);
+  } finally {
+    // Cerrar la conexión después de usarla
+    if (pool) {
+      pool.close();
+    }
+  }
+});
+
 
 // Inicia el servidor
 app.listen(port, () => {
