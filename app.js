@@ -98,6 +98,33 @@ app.put('/ActualizarArticulo/:id', async (req, res) => {
     }
   }
 });
+//end point para delete 
+app.delete('/DeleteArticulo/:id',async (req,res)=>{
+const {id}= req.params;
+let pool;
+try {
+  pool = await mssql.connect(sqlConfig);
+  const result= await pool
+  .request()
+  .input('ID', mssql.Int, id)
+  .query('DELETE FROM Publicacion WHERE ID = @ID');
+  if (result.rowsAffected[0] > 0) {
+    res.status(200).send('Artículo eliminado con éxito');
+  } else {
+    res.status(404).send('Artículo no encontrado');
+  }
+} catch (error) {
+  console.error('Error al eliminar el artículo:', error.message);
+    res.status(500).send('Error al eliminar el artículo: ' + error.message);
+}
+finally {
+  if (pool) {
+    pool.close();
+  }
+}
+});
+// end point para select por id 
+
 
 
 // Inicia el servidor
