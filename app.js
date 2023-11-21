@@ -93,7 +93,6 @@ app.put('/ActualizarArticulo/:id', async (req, res) => {
     console.error('Error al actualizar el artículo:', error.message);
     res.status(500).send('Error al actualizar el artículo: ' + error.message);
   } finally {
-    // Cerrar la conexión después de usarla
     if (pool) {
       pool.close();
     }
