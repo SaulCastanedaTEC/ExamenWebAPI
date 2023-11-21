@@ -1,0 +1,42 @@
+name: Node.js CI/CD with Docker
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v2
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '14'
+
+      - name: Build Docker image
+        run: |
+          docker build -t examen-web-api .
+        working-directory: ./ExamenWebAPI # Ajusta la carpeta si tu Dockerfile está en una subcarpeta
+
+      - name: Deploy to Docker
+        run: |
+          docker run -d -p 4003:4000 examen-web-api
+        working-directory: ./ExamenWebAPI # Ajusta la carpeta si tu Dockerfile está en una subcarpeta
+
+      - name: Test deployment (optional)
+        run: |
+          sleep 10 # Espera a que la aplicación arranque
+          curl http://localhost:4000 # Reemplaza con la URL de tu aplicación
+
+      - name: Stop Docker containers (optional)
+        run: |
+          docker stop $(docker ps -q --filter ancestor=examen-web-api)
+          docker rm $(docker ps -a -q --filter ancestor=examen-web-api)
+        working-directory: ./ExamenWebAPI # Ajusta la carpeta si tu Dockerfile está en una subcarpeta
+
+
