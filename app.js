@@ -2,7 +2,7 @@ const express = require('express');
 const mssql = require('mssql');
 
 const app = express();
-const port = 4001;
+const port = 4002;
 
 const sqlConfig = {
   user: 'asd1',
@@ -36,6 +36,35 @@ app.get('/articulos', async (req, res) => {
     }
   }
 });
+// Endpoint para insertar un artículo
+app.post('/InsertarAArticulos', async (req, res) => {
+  const { Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion } = req.body;
+
+  let pool;
+  try {
+    pool = await mssql.connect(sqlConfig);
+   
+    const result = await pool
+    .request()
+    .input('Titulo', mssql.NVarChar, req.body.Titulo)
+    .input('Contenido', mssql.NVarChar, req.body.Contenido)
+    .input('Autor', mssql.NVarChar, req.body.Autor)
+    .input('Categoria', mssql.NVarChar, req.body.Categoria)
+    .input('Fecha_de_publicacion', mssql.DateTime, req.body.Fecha_de_publicacion)
+    .query('INSERT INTO Publicacion (Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion) VALUES (@Titulo, @Contenido, @Autor, @Categoria, @Fecha_de_publicacion)');
+  
+    res.status(201).send('Artículo insertado con éxito');
+  } catch (error) {
+    console.error('Error al insertar el artículo:', error.message);
+    res.status(500).send('Error al insertar el artículo: ' + error.message);
+  } finally {
+    // Cerrar la conexión después de usarla
+    if (pool) {
+      pool.close();
+    }
+  }
+});
+ 
 
 // Inicia el servidor
 app.listen(port, () => {
