@@ -2,22 +2,25 @@ const express = require('express');
 const mssql = require('mssql');
 
 const app = express();
-const port = 4002;
+const port = 4000;
+
+const connectionString = process.env.DATABASE_CONNECTION_STRING || 'Server=localhost;Database=Examen2;User Id=examen;Password=sa;Encrypt=true;EnableArithAbort=true;';
+
 const sqlConfig = {
-  user: process.env.SQL_SERVER_USER || 'sa',
-  password: process.env.SQL_SERVER_PASSWORD || 'TU_CONTRASENA_SA',
-  server: process.env.SQL_SERVER_HOST || 'localhost',
-  database: process.env.SQL_SERVER_DATABASE || 'TU_BASE_DE_DATOS',
+  user: 'examen',
+  password: 'sa',
+  server: 'localhost',
+  database: 'Examen2',
   options: {
     encrypt: true,
     enableArithAbort: true,
+    trustServerCertificate: true,
   },
 };
 
-// Resto del código...
 
 
-// Middleware para parsear el cuerpo de las solicitudes a JSON
+
 app.use(express.json());
 
 // Endpoint para obtener todos los artículos
@@ -38,24 +41,45 @@ app.get('/articulos', async (req, res) => {
   }
 });
 // Endpoint para insertar un artículo
-app.post('/InsertarAArticulos', async (req, res) => {
+
+app.post('/insertar', async (req, res) => {
   const { Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion } = req.body;
 
+  // Validación de entrada
+  if (!Titulo || !Contenido || !Autor || !Categoria || !Fecha_de_publicacion) {
+    return res.status(400).send('Todos los campos son obligatorios.');
+  }
+
   let pool;
+  let transaction;
+
   try {
     pool = await mssql.connect(sqlConfig);
-   
+    transaction = new mssql.Transaction(pool);
+    await transaction.begin();
+
     const result = await pool
-    .request()
-    .input('Titulo', mssql.NVarChar, req.body.Titulo)
-    .input('Contenido', mssql.NVarChar, req.body.Contenido)
-    .input('Autor', mssql.NVarChar, req.body.Autor)
-    .input('Categoria', mssql.NVarChar, req.body.Categoria)
-    .input('Fecha_de_publicacion', mssql.DateTime, req.body.Fecha_de_publicacion)
-    .query('INSERT INTO Publicacion (Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion) VALUES (@Titulo, @Contenido, @Autor, @Categoria, @Fecha_de_publicacion)');
-  
+      .request()
+      .input('Titulo', mssql.NVarChar, Titulo)
+      .input('Contenido', mssql.NVarChar, Contenido)
+      .input('Autor', mssql.NVarChar, Autor)
+      .input('Categoria', mssql.NVarChar, Categoria)
+      .input('Fecha_de_publicacion', mssql.DateTime, Fecha_de_publicacion)
+      .query('INSERT INTO Publicacion (Titulo, Contenido, Autor, Categoria, Fecha_de_publicacion) VALUES (@Titulo, @Contenido, @Autor, @Categoria, @Fecha_de_publicacion)');
+
+    // Confirmar la transacción si todo está bien
+    await transaction.commit();
     res.status(201).send('Artículo insertado con éxito');
   } catch (error) {
+    // Revertir la transacción en caso de error
+    if (transaction) {
+      await transaction.rollback();
+    }
+
+    if (error.number === 2627) { // Violación de clave única
+      return res.status(400).send('Error al insertar el artículo: El título ya existe.');
+    }
+
     console.error('Error al insertar el artículo:', error.message);
     res.status(500).send('Error al insertar el artículo: ' + error.message);
   } finally {
@@ -65,6 +89,9 @@ app.post('/InsertarAArticulos', async (req, res) => {
     }
   }
 });
+
+  
+
  
 // end point para update 
 app.put('/ActualizarArticulo/:id', async (req, res) => {

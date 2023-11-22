@@ -1,23 +1,24 @@
+-- init.sql
+
 USE master;
-GO
 
-CREATE DATABASE TU_BASE_DE_DATOS;
-GO
+-- Crear una base de datos si no existe
+IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'Examen2')
+BEGIN
+    CREATE DATABASE Examen2;
+END;
 
-USE TU_BASE_DE_DATOS;
-GO
-CREATE TABLE Publicacion (
-  id INT IDENTITY(1,1) PRIMARY KEY,
-  Titulo VARCHAR(255),
-  Contenido VARCHAR(MAX),
-  Autor VARCHAR(255),
-  Categoria VARCHAR(255),
-  Fecha_de_publicacion DATETIME
-);
+USE Examen2;
 
--- Crear un usuario y darle permisos
-CREATE LOGIN tu_usuario WITH PASSWORD = 'tu_contraseña';
-CREATE USER tu_usuario FOR LOGIN tu_usuario;
-EXEC sp_addrolemember 'db_owner', 'tu_usuario';
-
-
+-- Crear la tabla Publicacion si no existe
+IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Publicacion')
+BEGIN
+    CREATE TABLE Publicacion (
+        ID INT PRIMARY KEY,
+        Titulo NVARCHAR(255),
+        Contenido NVARCHAR(MAX),
+        Autor NVARCHAR(255),
+        Categoria NVARCHAR(50),
+        Fecha_de_publicacion DATETIME
+    );
+END;
