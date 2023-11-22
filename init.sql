@@ -1,8 +1,3 @@
--- init.sql
-
-USE master;
-
--- Crear una base de datos si no existe
 IF NOT EXISTS (SELECT 1 FROM sys.databases WHERE name = 'Examen2')
 BEGIN
     CREATE DATABASE Examen2;
@@ -14,7 +9,7 @@ USE Examen2;
 IF NOT EXISTS (SELECT 1 FROM INFORMATION_SCHEMA.TABLES WHERE TABLE_NAME = 'Publicacion')
 BEGIN
     CREATE TABLE Publicacion (
-        ID INT PRIMARY KEY,
+        ID INT IDENTITY(1,1) PRIMARY KEY,
         Titulo NVARCHAR(255),
         Contenido NVARCHAR(MAX),
         Autor NVARCHAR(255),
